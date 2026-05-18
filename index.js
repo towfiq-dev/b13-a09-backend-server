@@ -24,6 +24,7 @@ async function run() {
     //await client.connect();
     const db = client.db("b13-a09-server");
     const appointmentsCollection = db.collection("appointments");
+    const bookingCollection = db.collection('userBookingInfo')
     
     // post operation
     app.post('/appointments', async(req, res)=>{
@@ -32,9 +33,20 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/bookings', async(req, res)=>{
+      const bookingsData = req.body
+      const result = await bookingCollection.insertOne(bookingsData)
+      res.send(result)
+    })
+
     // get operation
     app.get('/appointments', async(req, res)=>{
       const result = await appointmentsCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/featured', async(req, res)=>{
+      const result = await appointmentsCollection.find().limit(5).toArray()
       res.send(result)
     })
 
@@ -46,6 +58,17 @@ async function run() {
       const result = await appointmentsCollection.findOne(query)
       res.send(result)
     })
+
+  app.get('/bookings/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const query = { userId: userId }; 
+    const result = await bookingCollection.find(query).toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Server error", error });
+  }
+});
 
     //delete
     app.delete('/appointments/:id', async(req, res)=>{
