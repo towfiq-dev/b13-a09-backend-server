@@ -25,7 +25,7 @@ async function run() {
     const db = client.db("b13-a09-server");
     const appointmentsCollection = db.collection("appointments");
     
-    // post oparetion
+    // post operation
     app.post('/appointments', async(req, res)=>{
       const appointmentsData = req.body
       const result = await appointmentsCollection.insertOne(appointmentsData)
@@ -55,6 +55,22 @@ async function run() {
       }
       const result = await appointmentsCollection.deleteOne(query)
       res.send(result)
+    })
+
+    //patch
+    app.patch('/appointments/:id', async(req, res)=>{
+    const id = req.params.id
+    const query = {
+      _id: new ObjectId(id)
+    }
+    const update = req.body
+    const updated={
+    $set:{
+      ...update
+    }
+    }
+    const result = await appointmentsCollection.updateOne(query, updated)
+    res.send(result)
     })
 
     //await client.db("admin").command({ ping: 1 });
