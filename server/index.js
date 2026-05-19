@@ -4,7 +4,6 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { createRemoteJWKSet, jwtVerify } = require('jose-cjs')
 const port = process.env.PORT
 const uri = process.env.MONGODB_URI
 
@@ -19,54 +18,29 @@ const client = new MongoClient(uri, {
   }
 });
 
-
-// JWT authentication
-const JWKS = createRemoteJWKSet(
-  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
-)
-const verifyToken = async(req, res, next)=>{
-  const authHeader = req?.headers.authorization
-  if (!authHeader) {
-    return res.status(401).json({message: 'Unauthorized'})
-  }
-  const token = authHeader.split(" ")[1]
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" })
-  }
-  try{
-    const {payload} = await jwtVerify(token, JWKS)
-    console.log(payload);
-    
-    next()
-  }catch (error) {
-    return res.status(403).json({ message: "Forbidden" })
-  }
-}
-
 async function run() {
   try {
+
+    await client.connect();
     const db = client.db("b13-a09-server");
     const appointmentsCollection = db.collection("appointments");
     const bookingCollection = db.collection('userBookingInfo')
     
     // post operation
-    app.post('/appointments', verifyToken,
-      async(req, res)=>{
+    app.post('/appointments', async(req, res)=>{
       const appointmentsData = req.body
       const result = await appointmentsCollection.insertOne(appointmentsData)
       res.send(result)
     })
 
-    app.post('/bookings', verifyToken,
-      async(req, res)=>{
+    app.post('/bookings', async(req, res)=>{
       const bookingsData = req.body
       const result = await bookingCollection.insertOne(bookingsData)
       res.send(result)
     })
 
     // get operation
-    app.get('/appointments',
-      async(req, res)=>{
+    app.get('/appointments', async(req, res)=>{
       const result = await appointmentsCollection.find().toArray()
       res.send(result)
     })
@@ -76,8 +50,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/appointments/:id', verifyToken,
-      async(req, res)=>{
+    app.get('/appointments/:id', async(req, res)=>{
       const id = req.params.id
       const query = {
         _id: new ObjectId(id)
@@ -86,8 +59,7 @@ async function run() {
       res.send(result)
     })
 
-  app.get('/bookings/:userId', verifyToken, 
-    async (req, res) => {
+  app.get('/bookings/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const query = { userId: userId }; 
@@ -99,8 +71,7 @@ async function run() {
 });
 
     //delete
-    app.delete('/appointments/:id', verifyToken,
-      async(req, res)=>{
+    app.delete('/appointments/:id', async(req, res)=>{
       const id = req.params.id
       const query = {
         _id: new ObjectId(id)
@@ -109,8 +80,7 @@ async function run() {
       res.send(result)
     })
 
-    app.delete('/bookings/:id', verifyToken,
-      async(req, res)=>{
+    app.delete('/bookings/:id', async(req, res)=>{
       const id = req.params.id
       const query = {
         _id: new ObjectId(id)
@@ -120,8 +90,7 @@ async function run() {
     })
 
     //patch
-    app.patch('/appointments/:id', verifyToken,
-      async(req, res)=>{
+    app.patch('/appointments/:id', async(req, res)=>{
     const id = req.params.id
     const query = {
       _id: new ObjectId(id)
