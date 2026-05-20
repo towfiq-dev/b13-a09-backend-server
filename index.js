@@ -137,33 +137,6 @@ async function run() {
     res.send(result)
     })
 
-app.patch('/bookings/:id', verifyToken, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateData = req.body;
-
-    delete updateData._id;
-
-    const updated = {
-      $set: {
-        ...updateData
-      }
-    };
-
-    const result = await bookingCollection.updateOne(query, updated);
-    
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    res.json(result);
-  } catch (error) {
-    console.error("Booking update backend error:", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-});
-
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
