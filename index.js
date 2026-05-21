@@ -49,7 +49,49 @@ async function run() {
     const db = client.db("b13-a09-server");
     const appointmentsCollection = db.collection("appointments");
     const bookingCollection = db.collection('userBookingInfo')
-    
+    const userProfileCollection = db.collection('userProfiles');
+
+// GET user profile by userId
+app.get('/user-profile/:userId', verifyToken, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const profile = await userProfileCollection.findOne({ userId });
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+    res.send(profile);
+  } catch (error) {
+    res.status(500).send({ message: 'Server error', error });
+  }
+});
+
+// PUT (upsert) user profile by userId
+app.put('/user-profile/:userId', verifyToken, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { name, phone, location, bio, image } = req.body;
+    const updateData = {
+      $set: {
+        userId,
+        name: name || '',
+        phone: phone || '',
+        location: location || '',
+        bio: bio || '',
+        image: image || '',
+        updatedAt: new Date()
+      }
+    };
+    const result = await userProfileCollection.updateOne(
+      { userId },
+      updateData,
+      { upsert: true }
+    );
+    res.send({ success: true, result });
+  } catch (error) {
+    res.status(500).send({ message: 'Server error', error });
+  }
+});
+
     // post operation
     app.post('/appointments', verifyToken,
       async(req, res)=>{
