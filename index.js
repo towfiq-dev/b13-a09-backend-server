@@ -137,6 +137,23 @@ async function run() {
     res.send(result)
     })
 
+  // bookings patch
+app.patch('/bookings/:id', verifyToken,
+  async(req, res)=>{
+    const id = req.params.id
+    const query = {
+      _id: new ObjectId(id)
+    }
+    const update = req.body
+    const updated = {
+      $set: {
+        ...update
+      }
+    }
+    const result = await bookingCollection.updateOne(query, updated)
+    res.send(result)
+  })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
